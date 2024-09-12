@@ -1,5 +1,5 @@
 import calendar
-from datetime import date
+from datetime import date, datetime, timedelta
 from kivy.app import App
 from kivy.metrics import dp
 from kivy.uix.boxlayout import BoxLayout
@@ -11,8 +11,17 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.checkbox import CheckBox
 from kivy.uix.spinner import Spinner
+from kivy.uix.gridlayout import GridLayout
+from kivy.properties import DictProperty
+import json
+
 
 tasks_list = ['Walk the dog', 'Moms Birthday', "Ship shoes at store"]
+session_data = DictProperty({})
+session_data = {'cur_day': datetime.now().day}
+
+# label_month = Label(text=f"{calendar.month_name[self.month]}")
+# self.month = datetime.now().month
 
 # screen where user opens app at
 class MainScreen(Screen):
@@ -45,11 +54,14 @@ class MainScreen(Screen):
     def display_calendar(self, instance):
         self.manager.current = 'calender'
 
-# displays events if anything exists for the day
+# displays events if anything exists for the day selected
 class TasksScreen(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         layout = BoxLayout(orientation='vertical')
+        
+        with open('september.json', 'r') as file:
+            self.month_data = json.load(file)
 
 
         # creating widgets for screen/layout
@@ -86,15 +98,18 @@ class TasksScreen(Screen):
     def update_tasks(self):
         self.tasks_layout.clear_widgets()
         self.checkboxes = []  # Store references to checkboxes
-        for task in tasks_list:
-            task_layout = BoxLayout(size_hint_y=None, height=40)
-            checkbox = CheckBox(size_hint_x=None, width=30)
-            label = Label(text=task, size_hint_x=1, halign='left')
-            label.bind(size=label.setter('text_size'))
-            task_layout.add_widget(checkbox)
-            task_layout.add_widget(label)
-            self.tasks_layout.add_widget(task_layout)
-            self.checkboxes.append((checkbox, task))
+        
+
+        if str(session_data['cur_day']) in self.month_data['tasks']:
+            for task in self.month_data['tasks'][str(session_data['cur_day'])]:
+                task_layout = BoxLayout(size_hint_y=None, height=40)
+                checkbox = CheckBox(size_hint_x=None, width=30)
+                label = Label(text=task, size_hint_x=1, halign='left')
+                label.bind(size=label.setter('text_size'))
+                task_layout.add_widget(checkbox)
+                task_layout.add_widget(label)
+                self.tasks_layout.add_widget(task_layout)
+                self.checkboxes.append((checkbox, task))
 
     def go_back(self, instance):
         self.manager.current = 'main'
@@ -150,12 +165,15 @@ class AddTaskScreen(Screen):
 class Calender(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.month = datetime.now().month
+        self.year = datetime.now().year
+        self.WEEK_LIST = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
         
-        time_labal = Label(text=f"Current Year:\n{date.today().year}",size_hint=(1, None),
+        self.time_labal = Label(text=f"Current Year:\n{date.today().year}",size_hint=(1, None),
                            height='48dp',  # Adjust this value as needed
                            pos_hint={'center_x': 0.5, 'top': 1})
-        main_layout = BoxLayout(orientation='horizontal')
-        left_layout = BoxLayout(orientation='vertical')
+        self.main_layout = BoxLayout(orientation='horizontal')
+        self.left_layout = BoxLayout(orientation='vertical')
 
         # month_spinner
         month_spinner = Spinner(text='SelectMonth',
@@ -165,7 +183,7 @@ class Calender(Screen):
                     height=dp(40),
                     size_hint_x=0.8)
         
-        left_layout.add_widget(month_spinner)
+        self.left_layout.add_widget(month_spinner)
 
 
         # creating widgets for screen/layout
@@ -178,33 +196,69 @@ class Calender(Screen):
 
         # binding buttons to functions
         button_back.bind(on_press=self.go_back_main)
-        left_layout.add_widget(button_back)
+        self.left_layout.add_widget(button_back)
 
-        right_layout = BoxLayout(orientation='vertical', size_hint_x=0.7)
+
+        self.right_layout = BoxLayout(orientation='vertical', size_hint_x=0.7)
+        self.create_calendar()
+
+    def create_calendar(self):
+        days_layout = GridLayout(cols=7, size_hint_y=0.1)
+
+        for day in ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]:
+            days_layout.add_widget(Label(text=day))
+
+        
+        label_month = Label(text=f"{calendar.month_name[self.month]}")
+
+        self.right_layout.add_widget(label_month)
+        self.right_layout.add_widget(days_layout)
+
+        # calendar grid
+        calendar_grid = GridLayout(cols=7)
+
+        # used to get the first day of the month
+        first_day = datetime(self.year, self.month, 1)
+        days_in_month = (datetime(self.year, self.month % 12 + 1, 1) - timedelta(days=1)).day
+
+        for _ in range(first_day.weekday()):
+            calendar_grid.add_widget(Label(text=""))
+        
+        with open('september.json', 'r') as file:
+            self.month_data = json.load(file)
+
+
+        # Add buttons for each day          
+        for day in range(1, days_in_month + 1):
+            btn = Button(text=str(day))
+            if day in self.month_data['busy_days']:
+                btn.background_color = [1, 0, 0, 1]
+                btn.bind(on_press=self.on_day_press)
+
+            calendar_grid.add_widget(btn)
+        
+        
+
+        self.right_layout.add_widget(calendar_grid)
+
 
         calendar_title = Label(
             text='Calendar',
             size_hint_y=None,
             height='48dp'
         )
-        self.calendar_display = Label(
-            text=calendar.month(date.today().year, date.today().month),
-            size_hint=(None, None),
-            size=(dp(500), dp(400)),  # Adjust these values as needed
-            text_size=(dp(300), dp(250)),  # This makes the text wrap within the label
-            halign='left',
-            valign='top',
-            font_name='RobotoMono-Regular'  # Use a monospaced font if available
-        )
+        self.right_layout.add_widget(calendar_title)
 
-        right_layout.add_widget(self.calendar_display)
-        right_layout.add_widget(calendar_title)
-
-        main_layout.add_widget(left_layout)
-        main_layout.add_widget(right_layout)
+        self.main_layout.add_widget(self.left_layout)
+        self.main_layout.add_widget(self.right_layout)
     
-        self.add_widget(time_labal)
-        self.add_widget(main_layout)
+        self.add_widget(self.time_labal)
+        self.add_widget(self.main_layout)
+
+    def on_day_press(self, instance):
+        self.day_number = int(instance.text)
+        session_data['cur_day'] = self.day_number
+        self.manager.current = 'tasks'
 
     def go_back_main(self, instance):
         self.manager.current = 'main'

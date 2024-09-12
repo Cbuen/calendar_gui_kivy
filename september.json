@@ -1,0 +1,31 @@
+{
+    "busy_days": [2, 5, 9, 15, 20, 25, 28],
+    "tasks": {
+      "2": [
+        "Meeting with client",
+        "Dentist appointment"
+      ],
+      "5": [
+        "Team lunch",
+        "Project deadline"
+      ],
+      "9": [
+        "Conference call"
+      ],
+      "15": [
+        "Birthday party",
+        "Gym session"
+      ],
+      "20": [
+        "Dinner with friends"
+      ],
+      "25": [
+        "Quarterly review",
+        "Pick up dry cleaning"
+      ],
+      "28": [
+        "Flight to New York",
+        "Hotel check-in"
+      ]
+    }
+}
