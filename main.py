@@ -60,8 +60,6 @@ class TasksScreen(Screen):
         super().__init__(**kwargs)
         layout = BoxLayout(orientation='vertical')
         
-        with open('september.json', 'r') as file:
-            self.month_data = json.load(file)
 
 
         # creating widgets for screen/layout
@@ -94,18 +92,6 @@ class TasksScreen(Screen):
 
     def on_pre_enter(self):
         self.update_tasks()
-        
-
-        if str(session_data['cur_day']) in self.month_data['tasks']:
-            for task in self.month_data['tasks'][str(session_data['cur_day'])]:
-                task_layout = BoxLayout(size_hint_y=None, height=40)
-                checkbox = CheckBox(size_hint_x=None, width=30)
-                label = Label(text=task, size_hint_x=1, halign='left')
-                label.bind(size=label.setter('text_size'))
-                task_layout.add_widget(checkbox)
-                task_layout.add_widget(label)
-                self.tasks_layout.add_widget(task_layout)
-                self.checkboxes.append((checkbox, task))
 
     def go_back(self, instance):
         self.manager.current = 'main'
@@ -136,8 +122,23 @@ class TasksScreen(Screen):
         self.update_tasks()
 
     def update_tasks(self):
+        with open('september.json', 'r') as file:
+            self.month_data = json.load(file)
+
+         # Clear existing widgets and checkboxes
         self.tasks_layout.clear_widgets()
-        self.checkboxes = []  # Store references to checkboxes
+        self.checkboxes = []
+        
+        if str(session_data['cur_day']) in self.month_data['tasks']:
+            for task in self.month_data['tasks'][str(session_data['cur_day'])]:
+                task_layout = BoxLayout(size_hint_y=None, height=40)
+                checkbox = CheckBox(size_hint_x=None, width=30)
+                label = Label(text=task, size_hint_x=1, halign='left')
+                label.bind(size=label.setter('text_size'))
+                task_layout.add_widget(checkbox)
+                task_layout.add_widget(label)
+                self.tasks_layout.add_widget(task_layout)
+                self.checkboxes.append((checkbox, task))
 
 
 # displays events if anything exists for the day
