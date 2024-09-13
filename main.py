@@ -94,10 +94,6 @@ class TasksScreen(Screen):
 
     def on_pre_enter(self):
         self.update_tasks()
-    
-    def update_tasks(self):
-        self.tasks_layout.clear_widgets()
-        self.checkboxes = []  # Store references to checkboxes
         
 
         if str(session_data['cur_day']) in self.month_data['tasks']:
@@ -118,12 +114,30 @@ class TasksScreen(Screen):
         self.manager.current = 'addTask'
     
     def remove_tasks(self, instance):
-        global tasks_list
-        task_to_remove = [task for checkbox, task in self.checkboxes if checkbox.active]
-        for task in task_to_remove:
-            tasks_list.remove(task)
-        self.update_tasks()
+        # First, read the current data
+        with open('september.json', 'r') as file:
+            self.month_data_write = json.load(file)
         
+        # Modify the data
+        tasks_to_remove = [task for checkbox, task in self.checkboxes if checkbox.active]
+        current_day = str(session_data['cur_day'])
+
+        if current_day in self.month_data_write['tasks']:
+            self.month_data_write['tasks'][current_day] = [
+                task for task in self.month_data_write['tasks'][current_day] 
+                if task not in tasks_to_remove
+            ]
+
+        # Now, write the modified data back to the file
+        with open('september.json', 'w') as file:
+            json.dump(self.month_data_write, file, indent=2)
+        
+    # Update the UI
+        self.update_tasks()
+
+    def update_tasks(self):
+        self.tasks_layout.clear_widgets()
+        self.checkboxes = []  # Store references to checkboxes
 
 
 # displays events if anything exists for the day
@@ -155,11 +169,39 @@ class AddTaskScreen(Screen):
         self.add_widget(layout)
 
     def add(self, instance):
-        tasks_list.append(self.textinput_task.text)
+        # First, read the current data
+        try:
+            with open('september.json', 'r') as file:
+                self.month_data_write = json.load(file)
+        except FileNotFoundError:
+            self.month_data_write = {"tasks": {}}
 
+        current_day = str(session_data['cur_day'])
+        new_task = str(self.textinput_task.text).strip()
+
+        # Check if the new task is not empty
+        if not new_task:
+            return  # Don't add empty tasks
+
+        # Ensure 'tasks' key exists
+        if 'tasks' not in self.month_data_write:
+            self.month_data_write['tasks'] = {}
+
+        # Add the task
+        if current_day not in self.month_data_write['tasks']:
+            self.month_data_write['tasks'][current_day] = [new_task]
+        else:
+            self.month_data_write['tasks'][current_day].append(new_task)
+
+        # Write the modified data back to the file
+        with open('september.json', 'w') as file:
+            json.dump(self.month_data_write, file, indent=2)
+
+        # Clear the input field
+        self.textinput_task.text = ''
+        
     def go_back_tasks(self, instance):
         self.manager.current = 'tasks'
-
 
 # displays events if anything exists for the day
 class Calender(Screen):
@@ -231,9 +273,10 @@ class Calender(Screen):
         # Add buttons for each day          
         for day in range(1, days_in_month + 1):
             btn = Button(text=str(day))
-            if day in self.month_data['busy_days']:
+            if str(day) in self.month_data['tasks'] and (len(self.month_data['tasks'][str(day)]) != 0):
                 btn.background_color = [1, 0, 0, 1]
-                btn.bind(on_press=self.on_day_press)
+
+            btn.bind(on_press=self.on_day_press)
 
             calendar_grid.add_widget(btn)
         
