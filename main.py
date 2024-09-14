@@ -64,7 +64,7 @@ class TasksScreen(Screen):
 
         # creating widgets for screen/layout
         image_logo = Image(source='pencil.png', size_hint=(1.2, 1.2), pos_hint={'center_x': 0.5})
-        label_day = Label(text=f"{str(session_data['cur_day'])}", font_size='14sp') # smaller font for other widgets
+        self.label_day = Label(text=f"{str(session_data['cur_day'])}", font_size='14sp') # smaller font for other widgets
         button_back = Button(text='Back to main screen',
                             size_hint=(.4, .2), pos_hint={'center_x': 0.5})
         button_add_task = Button(text='Add Task', size_hint=(.4, .2), pos_hint={'center_x': 0.5})
@@ -84,7 +84,7 @@ class TasksScreen(Screen):
 
         # position of code makes the posistion of widget in GUI
         layout.add_widget(image_logo)
-        layout.add_widget(label_day)
+        layout.add_widget(self.label_day)
         layout.add_widget(scroll_view)
         layout.add_widget(button_add_task)
         layout.add_widget(button_remove_tasks)
@@ -93,6 +93,7 @@ class TasksScreen(Screen):
         self.add_widget(layout)
 
     def on_pre_enter(self):
+        self.label_day.text = f"{session_data['cur_day']}"
         self.update_tasks()
 
     def go_back(self, instance):
