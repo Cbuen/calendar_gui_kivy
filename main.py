@@ -64,10 +64,11 @@ class TasksScreen(Screen):
 
         # creating widgets for screen/layout
         image_logo = Image(source='pencil.png', size_hint=(1.2, 1.2), pos_hint={'center_x': 0.5})
+        label_day = Label(text=f"{str(session_data['cur_day'])}", font_size='14sp') # smaller font for other widgets
         button_back = Button(text='Back to main screen',
-                            size_hint=(.3, .1), pos_hint={'center_x': 0.5})
-        button_add_task = Button(text='Add Task', size_hint=(.3, .1), pos_hint={'center_x': 0.5})
-        button_remove_tasks = Button(text='Remove Selected Tasks', size_hint=(.3, .1), pos_hint={'center_x': 0.5})
+                            size_hint=(.4, .2), pos_hint={'center_x': 0.5})
+        button_add_task = Button(text='Add Task', size_hint=(.4, .2), pos_hint={'center_x': 0.5})
+        button_remove_tasks = Button(text='Remove Selected Tasks', size_hint=(.4, .2), pos_hint={'center_x': 0.5})
 
         # Create a ScrollView to contain the tasks
         scroll_view = ScrollView()
@@ -83,6 +84,7 @@ class TasksScreen(Screen):
 
         # position of code makes the posistion of widget in GUI
         layout.add_widget(image_logo)
+        layout.add_widget(label_day)
         layout.add_widget(scroll_view)
         layout.add_widget(button_add_task)
         layout.add_widget(button_remove_tasks)
@@ -218,7 +220,7 @@ class Calender(Screen):
         self.main_layout = BoxLayout(orientation='horizontal')
         self.left_layout = BoxLayout(orientation='vertical')
 
-        # month_spinner
+        # month_spinner ! START EDITING CODE HERE TO CONNECT SPINNER FUNCTIONAILITY TO JSON FILES
         month_spinner = Spinner(text='SelectMonth',
                                 values=['January', 'February', 'March', 'April', 'May', 'June', 
                     'July', 'August', 'September', 'October', 'November', 'December'],
@@ -243,48 +245,20 @@ class Calender(Screen):
 
 
         self.right_layout = BoxLayout(orientation='vertical', size_hint_x=0.7)
-        self.create_calendar()
 
-    def create_calendar(self):
-        days_layout = GridLayout(cols=7, size_hint_y=0.1)
+        self.days_layout = GridLayout(cols=7, size_hint_y=0.1)
 
         for day in ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]:
-            days_layout.add_widget(Label(text=day))
+            self.days_layout.add_widget(Label(text=day))
 
         
         label_month = Label(text=f"{calendar.month_name[self.month]}")
 
         self.right_layout.add_widget(label_month)
-        self.right_layout.add_widget(days_layout)
+        self.right_layout.add_widget(self.days_layout)
 
-        # calendar grid
-        calendar_grid = GridLayout(cols=7)
-
-        # used to get the first day of the month
-        first_day = datetime(self.year, self.month, 1)
-        days_in_month = (datetime(self.year, self.month % 12 + 1, 1) - timedelta(days=1)).day
-
-        for _ in range(first_day.weekday()):
-            calendar_grid.add_widget(Label(text=""))
-        
-        with open('september.json', 'r') as file:
-            self.month_data = json.load(file)
-
-
-        # Add buttons for each day          
-        for day in range(1, days_in_month + 1):
-            btn = Button(text=str(day))
-            if str(day) in self.month_data['tasks'] and (len(self.month_data['tasks'][str(day)]) != 0):
-                btn.background_color = [1, 0, 0, 1]
-
-            btn.bind(on_press=self.on_day_press)
-
-            calendar_grid.add_widget(btn)
-        
-        
-
-        self.right_layout.add_widget(calendar_grid)
-
+        self.calendar_grid = GridLayout(cols=7)
+        self.right_layout.add_widget(self.calendar_grid)
 
         calendar_title = Label(
             text='Calendar',
@@ -295,9 +269,54 @@ class Calender(Screen):
 
         self.main_layout.add_widget(self.left_layout)
         self.main_layout.add_widget(self.right_layout)
-    
+
         self.add_widget(self.time_labal)
         self.add_widget(self.main_layout)
+
+        self.create_calendar()
+
+    def create_calendar(self):
+
+        # Clear existing widgets in the calendar grid
+        self.calendar_grid.clear_widgets()
+
+        first_day = datetime(self.year, self.month, 1)
+        self.days_in_month = (datetime(self.year, self.month % 12 + 1, 1) - timedelta(days=1)).day
+
+        # used to get the first day of the month
+        first_day = datetime(self.year, self.month, 1)
+        self.days_in_month = (datetime(self.year, self.month % 12 + 1, 1) - timedelta(days=1)).day
+
+        for _ in range(first_day.weekday()):
+            self.calendar_grid.add_widget(Label(text=""))
+
+    def update_calender(self):
+        # Clear existing widgets in the calendar grid
+        self.calendar_grid.clear_widgets()
+        
+        with open('september.json', 'r') as file:
+            self.month_data = json.load(file)
+
+        # Get the first day of the month
+        first_day = datetime(self.year, self.month, 1)
+        
+        # Add empty labels for days before the 1st of the month
+        for _ in range(first_day.weekday()):
+            self.calendar_grid.add_widget(Label(text=""))
+
+        # Add buttons for each day          
+        for day in range(1, self.days_in_month + 1):
+            btn = Button(text=str(day))
+            if str(day) in self.month_data['tasks'] and (len(self.month_data['tasks'][str(day)]) != 0):
+                btn.background_color = [1, 0, 0, 1]
+
+            btn.bind(on_press=self.on_day_press)
+
+            self.calendar_grid.add_widget(btn)
+
+
+    def on_pre_enter(self):
+        self.update_calender()
 
     def on_day_press(self, instance):
         self.day_number = int(instance.text)
