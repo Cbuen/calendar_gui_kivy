@@ -19,6 +19,7 @@ import json
 tasks_list = ['Walk the dog', 'Moms Birthday', "Ship shoes at store"]
 session_data = DictProperty({})
 session_data = {'cur_day': datetime.now().day}
+json_file_name = f"{datetime.now().strftime('%B')}"
 
 # label_month = Label(text=f"{calendar.month_name[self.month]}")
 # self.month = datetime.now().month
@@ -104,7 +105,7 @@ class TasksScreen(Screen):
     
     def remove_tasks(self, instance):
         # First, read the current data
-        with open('september.json', 'r') as file:
+        with open(f'{json_file_name}.json', 'r') as file:
             self.month_data_write = json.load(file)
         
         # Modify the data
@@ -118,14 +119,14 @@ class TasksScreen(Screen):
             ]
 
         # Now, write the modified data back to the file
-        with open('september.json', 'w') as file:
+        with open(f'{json_file_name}.json', 'w') as file:
             json.dump(self.month_data_write, file, indent=2)
         
     # Update the UI
         self.update_tasks()
 
     def update_tasks(self):
-        with open('september.json', 'r') as file:
+        with open(f'{json_file_name}.json', 'r') as file:
             self.month_data = json.load(file)
 
          # Clear existing widgets and checkboxes
@@ -133,7 +134,7 @@ class TasksScreen(Screen):
         self.checkboxes = []
         
         if str(session_data['cur_day']) in self.month_data['tasks']:
-            for task in self.month_data['tasks'][str(session_data['cur_day'])]:
+            for task in self.month_data[ 'tasks'][str(session_data['cur_day'])]:
                 task_layout = BoxLayout(size_hint_y=None, height=40)
                 checkbox = CheckBox(size_hint_x=None, width=30)
                 label = Label(text=task, size_hint_x=1, halign='left')
@@ -175,7 +176,7 @@ class AddTaskScreen(Screen):
     def add(self, instance):
         # First, read the current data
         try:
-            with open('september.json', 'r') as file:
+            with open(f'{json_file_name}.json', 'r') as file:
                 self.month_data_write = json.load(file)
         except FileNotFoundError:
             self.month_data_write = {"tasks": {}}
@@ -198,7 +199,7 @@ class AddTaskScreen(Screen):
             self.month_data_write['tasks'][current_day].append(new_task)
 
         # Write the modified data back to the file
-        with open('september.json', 'w') as file:
+        with open(f'{json_file_name}.json', 'w') as file:
             json.dump(self.month_data_write, file, indent=2)
 
         # Clear the input field
@@ -211,7 +212,7 @@ class AddTaskScreen(Screen):
 class Calender(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.month = datetime.now().month
+        self.month_number = datetime.strptime(json_file_name, "%B").month
         self.year = datetime.now().year
         self.WEEK_LIST = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
         
@@ -229,6 +230,7 @@ class Calender(Screen):
                     height=dp(40),
                     size_hint_x=0.8)
         
+        month_spinner.bind(text=self.on_month_spinner_select)
         self.left_layout.add_widget(month_spinner)
 
 
@@ -253,9 +255,9 @@ class Calender(Screen):
             self.days_layout.add_widget(Label(text=day))
 
         
-        label_month = Label(text=f"{calendar.month_name[self.month]}")
+        self.label_month = Label(text=f"{calendar.month_name[self.month_number]}")
 
-        self.right_layout.add_widget(label_month)
+        self.right_layout.add_widget(self.label_month)
         self.right_layout.add_widget(self.days_layout)
 
         self.calendar_grid = GridLayout(cols=7)
@@ -276,17 +278,22 @@ class Calender(Screen):
 
         self.create_calendar()
 
+    def on_month_spinner_select(self, spinner, text):
+        global json_file_name
+        json_file_name = spinner.text
+        self.month_number = datetime.strptime(json_file_name, "%B").month
+        self.days_in_month = (datetime(self.year, self.month_number % 12 + 1, 1) - timedelta(days=1)).day
+        self.label_month.text = spinner.text
+        self.update_calender()
+
     def create_calendar(self):
 
         # Clear existing widgets in the calendar grid
         self.calendar_grid.clear_widgets()
 
-        first_day = datetime(self.year, self.month, 1)
-        self.days_in_month = (datetime(self.year, self.month % 12 + 1, 1) - timedelta(days=1)).day
-
         # used to get the first day of the month
-        first_day = datetime(self.year, self.month, 1)
-        self.days_in_month = (datetime(self.year, self.month % 12 + 1, 1) - timedelta(days=1)).day
+        first_day = datetime(self.year, self.month_number, 1)
+        self.days_in_month = (datetime(self.year, self.month_number % 12 + 1, 1) - timedelta(days=1)).day
 
         for _ in range(first_day.weekday()):
             self.calendar_grid.add_widget(Label(text=""))
@@ -295,11 +302,12 @@ class Calender(Screen):
         # Clear existing widgets in the calendar grid
         self.calendar_grid.clear_widgets()
         
-        with open('september.json', 'r') as file:
+        with open(f'{json_file_name}.json', 'r') as file:
             self.month_data = json.load(file)
 
         # Get the first day of the month
-        first_day = datetime(self.year, self.month, 1)
+        first_day = datetime(self.year, self.month_number, 1)
+        self.days_in_month = (datetime(self.year, self.month_number % 12 + 1, 1) - timedelta(days=1)).day
         
         # Add empty labels for days before the 1st of the month
         for _ in range(first_day.weekday()):
