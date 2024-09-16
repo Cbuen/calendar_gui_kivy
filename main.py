@@ -20,6 +20,7 @@ tasks_list = ['Walk the dog', 'Moms Birthday', "Ship shoes at store"]
 session_data = DictProperty({})
 session_data = {'cur_day': datetime.now().day}
 json_file_name = f"{datetime.now().strftime('%B')}"
+IMG1 = 'clipboard.png'
 
 # label_month = Label(text=f"{calendar.month_name[self.month]}")
 # self.month = datetime.now().month
@@ -33,9 +34,9 @@ class MainScreen(Screen):
         #create wigdets
         label = Label(text='Hello U$er')
         button_cal = Button(text='Calendar',
-                            size_hint=(.5, .25), pos_hint={'center_x': 0.5})
+                            size_hint=(.4, .15), pos_hint={'center_x': 0.5})
         button_today_tasks = Button(text="Todays Tasks",
-                            size_hint=(.5, .25), pos_hint={'center_x': 0.5})
+                            size_hint=(.4, .15), pos_hint={'center_x': 0.5})
 
         # Binding buttons
         button_cal.bind(on_press=self.display_calendar)
@@ -64,7 +65,7 @@ class TasksScreen(Screen):
 
 
         # creating widgets for screen/layout
-        image_logo = Image(source='pencil.png', size_hint=(1.2, 1.2), pos_hint={'center_x': 0.5})
+        image_logo = Image(source=IMG1, size_hint=(1.2, 1.2), pos_hint={'center_x': 0.5})
         self.label_day = Label(text=f"{str(session_data['cur_day'])}", font_size='14sp') # smaller font for other widgets
         button_back = Button(text='Back to main screen',
                             size_hint=(.4, .2), pos_hint={'center_x': 0.5})
@@ -153,7 +154,7 @@ class AddTaskScreen(Screen):
 
 
         # creating widgets for screen/layout
-        image_logo = Image(source='pencil.png', size_hint=(.5, .5), pos_hint={'center_x': 0.5})
+        image_logo = Image(source=IMG1, size_hint=(.5, .5), pos_hint={'center_x': 0.5})
         button_back = Button(text='Back to task screen',
                             size_hint=(.3, .1), pos_hint={'center_x': 0.5})
         button_add = Button(text='Add',
