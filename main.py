@@ -22,9 +22,6 @@ session_data = {'cur_day': datetime.now().day}
 json_file_name = f"{datetime.now().strftime('%B')}"
 IMG1 = 'clipboard.png'
 
-# label_month = Label(text=f"{calendar.month_name[self.month]}")
-# self.month = datetime.now().month
-
 # screen where user opens app at
 class MainScreen(Screen):
     def __init__(self, **kwargs):
