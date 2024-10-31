@@ -2,7 +2,7 @@
 
 ## **Description**
 
-Calender GUI Using Kivy
+A calendar application built using the Kivy framework, designed to help users manage their tasks efficiently - the clutter. 
 
 ## **Features**
 
