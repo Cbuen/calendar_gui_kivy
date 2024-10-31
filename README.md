@@ -20,15 +20,10 @@ Simple Calender GUI Using Kivy
 
 ## **Technologies Used**
 
-- **Backend**: Python, Flask
-- **Frontend**: HTML, CSS, JavaScript
-- **CSS Framework**: Bootstrap
+- Python
+- Kivy
 - **Data stored locally via json**
 
 ## **Future Goals**
 
-Simple future goals I wish to add as I improve my skills and knowledge:
-
 1. **Mobile App Development**: Add mobile usability
-2. **Database integration**
-3. **User authentication/profile infrastructure**
