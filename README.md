@@ -1,8 +1,8 @@
-**Simple Budget Web App** ✏️
+**Kivy Task Calender *📅
 
 ## **Description**
 
-Simple Calender GUI Using Kivy
+Calender GUI Using Kivy
 
 ## **Features**
 
